@@ -1,0 +1,52 @@
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
+
+afterEvaluate { project ->
+    uploadArchives {
+        repositories {
+            mavenDeployer {
+                pom.groupId = GROUP
+                pom.artifactId = POM_ARTIFACT_ID
+                pom.version = VERSION_NAME
+
+                repository(url: QA_RELEASES_URL) {
+                    authentication(userName: QA_USERNAME, password: QA_PASSWORD)
+                }
+
+                snapshotRepository(url: QA_SNAPSHOT_URL) {
+                    authentication(userName: QA_USERNAME, password: QA_PASSWORD)
+                }
+
+                pom.project {
+                    name POM_NAME
+                    packaging POM_PACKAGING
+                }
+            }
+        }
+    }
+
+    task javadocsJar(type: Jar) {
+        classifier = 'javadoc'
+        from javadoc
+    }
+
+    task sourcesJar(type: Jar) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+
+    artifacts {
+        archives sourcesJar
+        archives javadocsJar
+    }
+}
+
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+}
+

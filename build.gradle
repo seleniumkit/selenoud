@@ -1,0 +1,68 @@
+group GROUP
+version VERSION_NAME
+
+apply plugin: 'groovy'
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'io.ratpack.ratpack-groovy'
+apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'docker'
+
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+buildscript {
+    repositories {
+        jcenter()
+        mavenLocal()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.3'
+        classpath 'io.ratpack:ratpack-gradle:1.4.1'
+        classpath 'se.transmode.gradle:gradle-docker:1.2'
+    }
+}
+
+
+dependencies {
+    compile 'org.codehaus.groovy:groovy-all:2.4.6'
+    compile 'org.slf4j:slf4j-api:1.7.15'
+    compile 'org.slf4j:slf4j-log4j12:1.7.15'
+    compile 'com.google.code.gson:gson:2.7'
+    compile 'com.spotify:docker-client:3.5.12'
+    compile 'org.apache.commons:commons-io:1.3.2'
+    testCompile 'junit:junit:4.12'
+}
+
+docker {
+    baseImage 'java:openjdk-8-jre'
+    maintainer 'Ilya Sadykov "smecsia@gmail.com"'
+}
+
+
+//tasks.withType(JavaExec) {
+//    systemProperties System.properties
+//}
+
+task docker(type: Docker) {
+    applicationName = 'selenoud'
+    defaultCommand  = ["/opt/selenoud/bin/selenoud"]
+    tag             = 'seleniumkit/selenoud'
+    exposePort      4444
+    volume          '/var/log/selenoud'
+    addFile         "build/distributions/selenoud-${VERSION_NAME}.zip", '/opt/selenoud.zip'
+    workingDir      '/opt'
+    runCommand      'mkdir -p /opt'
+    runCommand      'cd /opt'
+    runCommand      'unzip /opt/selenoud.zip'
+    runCommand      'rm /opt/selenoud.zip'
+    runCommand      "mv /opt/selenoud-${VERSION_NAME} /opt/selenoud"
+}
+
+apply from: rootDir.path + '/release.gradle'

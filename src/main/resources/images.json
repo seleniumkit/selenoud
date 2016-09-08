@@ -1,0 +1,18 @@
+{
+  "images": {
+    "chrome": {
+      "image": "selenium/node-chrome:latest"
+    },
+    "firefox": {
+      "image": "selenium/node-firefox:latest",
+      "path": "/wd/hub/"
+    }
+  },
+  "environment": [
+    "HUB_PORT_4444_TCP_ADDR=$hubHost",
+    "HUB_PORT_4444_TCP_PORT=$hubPort",
+    "REMOTE_HOST=$name",
+    "SE_OPTS=-port $port -Djava.security.egd=file:/dev/random",
+    "DISPLAY=:$port"
+  ]
+}
