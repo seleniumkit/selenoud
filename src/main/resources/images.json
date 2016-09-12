@@ -1,7 +1,8 @@
 {
   "images": {
     "chrome": {
-      "image": "selenium/node-chrome:latest"
+      "image": "selenium/node-chrome:latest",
+      "shmSize": 268435456
     },
     "firefox": {
       "image": "selenium/node-firefox:latest",

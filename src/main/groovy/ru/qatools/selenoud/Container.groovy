@@ -21,6 +21,6 @@ class Container extends BrowserContext {
     }
 
     String url(String rawUri){
-        "http://${host}${rawUri?.replaceFirst("/${PREFIX}", path)}"
+        "http://${host}:${port}${rawUri?.replaceFirst("/${PREFIX}", path)}"
     }
 }

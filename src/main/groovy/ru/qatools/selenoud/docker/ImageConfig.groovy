@@ -15,5 +15,6 @@ class ImageConfig {
     @CompileStatic
     static class Image {
         String image, path = "/wd/hub/"
+        Long shmSize = 67108864L
     }
 }

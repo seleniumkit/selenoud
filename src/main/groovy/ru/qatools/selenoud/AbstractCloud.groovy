@@ -108,7 +108,7 @@ abstract class AbstractCloud implements Cloud {
         try {
             final container = launchedBySessionId[sessionId]?.updated()
             request.add(BrowserContext, container)
-            final origSid = container?.originalSessionId ?: ( sessionId ? sessionId.split(':').last() : sessionId)
+            final origSid = container?.originalSessionId ?: (sessionId ? sessionId.split(':').last() : sessionId)
             final uri = request.rawUri?.replaceAll(sessionId, origSid)
             proxyToUrl(container.url(uri), request, response, client, request.body) {
                 response.beforeSend { call.call() }
@@ -152,6 +152,7 @@ abstract class AbstractCloud implements Cloud {
     protected abstract void removeContainer(String containerName)
 
     protected Optional<Container> waitForNode(Container container) {
+        watchSocketOpen(container)
         if (!launching[container.name]?.await(MAX_STARTUP_SEC, SECONDS)) {
             LOG.warn('[{}:{}] [NODE_TIMEOUT] [{}]', container.browser, container.version, container.name)
             safeRemoveContainer(container)
@@ -163,14 +164,31 @@ abstract class AbstractCloud implements Cloud {
         }
     }
 
+    protected Thread watchSocketOpen(Container container) {
+        Thread.start {
+            final long started = currentTimeMillis()
+            boolean success
+            try {
+                while ((MAX_STARTUP_SEC * 1000 as long) > currentTimeMillis() - started &&
+                        !(success = isHttpListen(container.host, container.port))) {
+                    sleep 5
+                }
+                if (success) {
+                    launching[container.name]?.countDown()
+                }
+            } catch (Throwable e) {
+                LOG.error('[{}:{}] Failed to wait for socket to open [{}]', container.browser, container.version, container.name, e)
+            }
+        }
+    }
+
     protected void createSession(Request request, Response response, HttpClient client, TypedData body, Container container) {
         try {
             final url = container.url(request.rawUri)
             LOG.trace('[{}:{}] [CREATING_SESSION] [{}] [{}]', container.browser, container.version, container.name, url)
             proxyToUrl(url, request, response, client, promise(body)) {
                 final text = it.body.getText()
-                LOG.trace('[{}:{}] [CREATE_RESPONSE] [{}] [{}]', container.browser, container.version,
-                        container.name, text)
+                LOG.trace('[{}:{}] [CREATE_RESPONSE] [{}] [{}]', container.browser, container.version, container.name, text)
                 final hubResponse = fromJson(text)
                 if (it.statusCode == 200) {
                     def sessionId = "${container.name}:${hubResponse.sessionId}" as String
@@ -205,7 +223,7 @@ abstract class AbstractCloud implements Cloud {
                 removeContainer(name)
                 launching.remove(name)
                 launched.remove(name)
-                launchedBySessionId.remove(sessionId)
+                launchedBySessionId.remove(sessionId ?: '')
             }
         } catch (Exception e) {
             LOG.error('Failed to remove container [{}]', name, e)

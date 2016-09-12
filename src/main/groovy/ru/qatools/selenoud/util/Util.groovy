@@ -76,6 +76,15 @@ enum Util {
                 }
             }
         }
-        throw new IllegalStateException("Could not find a free TCP/IP port to start embedded Jetty HTTP Server on");
+        throw new IllegalStateException("Could not find a free TCP/IP port");
     }
+
+    static boolean isHttpListen(String host, int port) {
+        try {
+            "http://${host}:${port}".toURL().openStream().read() > 0
+        } catch (IOException e) {
+            e.message.contains('HTTP')
+        }
+    }
+
 }
