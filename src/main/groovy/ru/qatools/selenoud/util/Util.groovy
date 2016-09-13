@@ -80,10 +80,16 @@ enum Util {
     }
 
     static boolean isHttpListen(String host, int port) {
+        InputStream is
         try {
-            "http://${host}:${port}".toURL().openStream().read() > 0
+            is = "http://${host}:${port}".toURL().openStream()
+            is.read() > 0
         } catch (IOException e) {
             e.message.contains('HTTP')
+        } finally {
+            if (is) {
+                try { is.close() } catch (Exception ignored) { }
+            }
         }
     }
 

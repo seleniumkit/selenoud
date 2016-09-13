@@ -26,7 +26,8 @@ abstract class AbstractCloud implements Cloud {
     protected final int MAX_STARTUP_SEC = intProp('limit.startupSec', '60'),
                         MAX_CONTAINERS = intProp('limit.count', '0'),
                         MAX_INACTIVITY_SEC = intProp('limit.inactivitySec', '120'),
-                        WATCHER_INTERVAL_MS = intProp('limit.watcherIntervalMs', '5000')
+                        WATCHER_INTERVAL_MS = intProp('limit.watcherIntervalMs', '5000'),
+                        HTTP_OPEN_INTERVAL_MS = intProp('limit.httpPingIntervalMs', '50')
     protected final Map<String, Container> launchedBySessionId = new ConcurrentHashMap<>()
     protected final Map<String, Container> launched = new ConcurrentHashMap<>()
     protected final Set<String> deleting = new ConcurrentSet<>()
@@ -107,8 +108,11 @@ abstract class AbstractCloud implements Cloud {
         LOG.trace('[PROXY] [{}] [{}]', sessionId, request.rawUri)
         try {
             final container = launchedBySessionId[sessionId]?.updated()
+            if (!container) {
+                throw new RuntimeException("Session not found ${sessionId}!")
+            }
             request.add(BrowserContext, container)
-            final origSid = container?.originalSessionId ?: (sessionId ? sessionId.split(':').last() : sessionId)
+            final origSid = container.originalSessionId
             final uri = request.rawUri?.replaceAll(sessionId, origSid)
             proxyToUrl(container.url(uri), request, response, client, request.body) {
                 response.beforeSend { call.call() }
@@ -152,7 +156,7 @@ abstract class AbstractCloud implements Cloud {
     protected abstract void removeContainer(String containerName)
 
     protected Optional<Container> waitForNode(Container container) {
-        watchSocketOpen(container)
+        watchHttpIsOpen(container)
         if (!launching[container.name]?.await(MAX_STARTUP_SEC, SECONDS)) {
             LOG.warn('[{}:{}] [NODE_TIMEOUT] [{}]', container.browser, container.version, container.name)
             safeRemoveContainer(container)
@@ -164,14 +168,14 @@ abstract class AbstractCloud implements Cloud {
         }
     }
 
-    protected Thread watchSocketOpen(Container container) {
+    protected Thread watchHttpIsOpen(Container container) {
         Thread.start {
             final long started = currentTimeMillis()
             boolean success
             try {
                 while ((MAX_STARTUP_SEC * 1000 as long) > currentTimeMillis() - started &&
                         !(success = isHttpListen(container.host, container.port))) {
-                    sleep 5
+                    sleep HTTP_OPEN_INTERVAL_MS
                 }
                 if (success) {
                     launching[container.name]?.countDown()

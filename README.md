@@ -8,7 +8,7 @@ Microservice acting like Selenium Hub, but launching Selenium nodes within Docke
     ```json
     {
       "images": {
-        "chrome": { "image": "selenium/node-chrome:latest", "path": "/wd/hub/"},
+        "chrome": { "image": "selenium/node-chrome:latest", "path": "/wd/hub/", "shmSize": 268435456 },
         "chrome:50.0.2661.86": { "image": "selenium/node-chrome:latest" },
         "chrome:50.0": {"image": "selenium/node-chrome:latest" },
         "chrome:50": { "image": "selenium/node-chrome:latest" },
@@ -26,7 +26,9 @@ Microservice acting like Selenium Hub, but launching Selenium nodes within Docke
     }
     ```
     In this file:
-    * `images` section specifies the list of used Docker images (every image will be pulled from repo upon start). An optional ```path``` parameter allows you to specify base URL used to create Selenium sessions (e.g. ```/wd/hub/``` for standard Selenium server).
+    * `images` section specifies the list of used Docker images (every image will be pulled from repo upon start). 
+        An optional ```path``` parameter allows you to specify base URL used to create Selenium sessions (e.g. ```/wd/hub/``` for standard Selenium server). 
+        An optional ```shmSize``` parameter allows you to specify the `ShmSize` parameter of container.
     * `environment` section represents the array of environment variables, that will be passed to the launching docker container. 
     You can use the following variables here: `$hubHost`, `$hubPort`, `$name`, `$port`, that represent host of this service,
     port of this service, name of a launching container and port of a launching container.
