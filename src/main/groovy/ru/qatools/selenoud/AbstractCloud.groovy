@@ -107,8 +107,11 @@ abstract class AbstractCloud implements Cloud {
         LOG.trace('[PROXY] [{}] [{}]', sessionId, request.rawUri)
         try {
             final container = launchedBySessionId[sessionId]?.updated()
+            if (!container) {
+                throw new RuntimeException("Session not found ${sessionId}!")
+            }
             request.add(BrowserContext, container)
-            final origSid = container?.originalSessionId ?: (sessionId ? sessionId.split(':').last() : sessionId)
+            final origSid = container.originalSessionId
             final uri = request.rawUri?.replaceAll(sessionId, origSid)
             proxyToUrl(container.url(uri), request, response, client, request.body) {
                 response.beforeSend { call.call() }
