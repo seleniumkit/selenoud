@@ -1,4 +1,7 @@
 # Selenoud
+
+[![Build Status](https://travis-ci.org/seleniumkit/selenoud.svg?branch=master)](https://travis-ci.org/seleniumkit/selenoud)
+
 Microservice acting like Selenium Hub, but launching Selenium nodes within Docker containers per session request.
 
 
