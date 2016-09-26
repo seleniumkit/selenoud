@@ -65,4 +65,4 @@ task docker(type: Docker) {
     runCommand      "mv /opt/selenoud-${VERSION_NAME} /opt/selenoud"
 }
 
-apply from: rootDir.path + '/release.gradle'
+// apply from: rootDir.path + '/release.gradle'
