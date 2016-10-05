@@ -205,7 +205,7 @@ abstract class AbstractCloud implements Cloud {
                     LOG.info('[{}:{}] [SESSION_CREATED] [{}] [{}]', container.browser, container.version,
                             container.name, sessionId)
                 }
-                response.send(toJson(hubResponse))
+                response.send('application/json', toJson(hubResponse))
             }
         } catch (Exception e) {
             LOG.warn('[{}:{}] [SESSION_FAILED] [{}] [{}]', container.browser, container.version, container.name, e.message, e)
